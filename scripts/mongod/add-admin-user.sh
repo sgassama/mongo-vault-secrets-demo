@@ -30,4 +30,3 @@ fi
 echo "Creating user: 'main_admin'"
 kubectl -n $NS exec mongod-statefulset-0 -- mongo --eval \
   'db.getSiblingDB("admin").createUser({user:"main_admin",pwd:"'"${1}"'",roles:[{role:"root",db:"admin"}]});'
-echo
