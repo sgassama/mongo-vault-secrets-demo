@@ -6,25 +6,27 @@ set -o nounset
 #set -o xtrace
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-NS=vault-injector
+NS=mvsd-vault
+SECRET_NAME=vault-server-tls
 
 #################################################################################
 #################################################################################
 #################################################################################
-# create namespace
-if grep -q -w $NS <<<"$(kubectl get ns)"; then
-  echo "$NS namespace already exists. Skipping to next step."
-else
-  echo "creating namespace: $NS"
-  kubectl create ns $NS
-fi
+CA_BUNDLE=$(kubectl get secrets/${SECRET_NAME} --namespace ${NS} -o jsonpath="{.data.vault-ca}")
+#echo "CA_BUNDLE: $CA_BUNDLE"
 
-#################################################################################
-#################################################################################
-#################################################################################
-# deploy mongo
-kubectl -n $NS apply -f "$SCRIPT_DIR/../../k8s/vault.yaml"
-sleep 10
+# deploy vault
+helm upgrade --install --namespace ${NS} vault hashicorp/vault \
+    --set="injector.certs.secretName=${SECRET_NAME}" \
+    --set="listener.tcp.tls_disable=false" \
+    --set="injector.certs.caBundle=${CA_BUNDLE}" >"$SCRIPT_DIR/output.yaml"
+#helm upgrade --install --namespace ${NS} vault hashicorp/vault --version=0.16.1 \
+#    --set='server.image.repository=vault' \
+#    --set='server.image.tag=123.456' \
+#    --output yaml \
+#    --dry-run >"$SCRIPT_DIR/output.yaml"
+#kubectl -n $NS apply -f "$SCRIPT_DIR/../../k8s/vault/vault.yaml"
+#sleep 20
 
 #################################################################################
 #################################################################################
@@ -33,3 +35,8 @@ sleep 10
 printf '\nk8s get all -n %s\n' "$NS"
 kubectl get all -n $NS
 printf '\nRun the following to see all the "vault" pods: "kubectl get po -w -n %s"\n' "$NS"
+
+kubectl get po -w -n $NS
+
+sleep 10
+exit 0

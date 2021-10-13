@@ -5,7 +5,7 @@ set -o pipefail
 set -o nounset
 #set -o xtrace
 
-NS=mongo-vault-secret-injection
+NS=mvsd-mongod
 
 # usage
 usage() {

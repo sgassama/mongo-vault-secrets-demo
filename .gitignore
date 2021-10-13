@@ -103,4 +103,4 @@ dist
 # TernJS port file
 .tern-port
 
-scripts/vault/vault-keys.json
+scripts/vault/vault-keys.txt

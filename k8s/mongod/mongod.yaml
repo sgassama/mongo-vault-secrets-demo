@@ -24,7 +24,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: mongo
-    namespace: mongo-vault-secret-injection
+    namespace: mvsd-mongod
 roleRef:
   kind: Role
   name: mongo-list-pods
@@ -80,7 +80,7 @@ spec:
       volumes:
         - name: secrets-volume
           secret:
-            secretName: shared-bootstrap-data
+            secretName: mvsd-mongod-bootstrap-secret
             defaultMode: 256
         - name: tmp-volume
           emptyDir: { }
@@ -134,7 +134,7 @@ spec:
             - name: MONGO_SIDECAR_POD_LABELS
               value: "role=mongo,environment=test,replicaset=MainRepSet"
             - name: KUBE_NAMESPACE
-              value: "mongo-vault-secret-injection"
+              value: "mvsd-mongod"
             - name: KUBERNETES_MONGO_SERVICE_NAME
               value: "mongodb-service"
   volumeClaimTemplates:

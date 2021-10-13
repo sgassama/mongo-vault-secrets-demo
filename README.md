@@ -13,7 +13,7 @@
 This deploys a `mongod` statefulset with 3 replicas. Each pod contains a sidecar `cvallance/mongo-k8s-sidecar` which monitors the namespace for any `mongod` containers and adds them to a replicaset.
 2. Verify the pods are running:
 ```
-kubectl get po -n mongo-vault-secret-injection
+kubectl get po -n mvsd-mongod
 ```
 You should see an output similar to this: 
 ```
@@ -37,7 +37,7 @@ This creates an admin user `admin_user` with the password provided to the script
 ```
 ./scripts/mongod/teardown.sh
 ```
-This script cleans up the `mongo-vault-secret-injection` namespace. It also removes the persistent volumes associated to each statefulset member.
+This script cleans up the `mvsd-mongod` namespace. It also removes the persistent volumes associated to each statefulset member.
 
 *********************************
 
@@ -46,12 +46,15 @@ This script cleans up the `mongo-vault-secret-injection` namespace. It also remo
 #### Setup
 1. From the project root, run:
 ```
+./scripts/vault/generate-tls-cert.sh
+2. From the project root, run:
+```
 ./scripts/vault/setup.sh
 ``` 
 This deploys a `vault` server, a secret injector, along with the RBAC policies necessary to inject secrets from the vault agent.
-2. Verify that the container has been deployed: 
+3. Verify that the container has been deployed: 
 ```
-kubectl -n vault-injector get po
+kubectl -n mvsd-vault get po
 ```
 The output should look similar to the following: 
 ```
@@ -59,39 +62,39 @@ NAME                                    READY   STATUS    RESTARTS   AGE
 vault-0                                 0/1     Running   0          24s
 vault-agent-injector-xxx-xxx            1/1     Running   0          23s
 ```
-3. From the project root, run:
+4. From the project root, run:
 ```
 ./scripts/vault/init-vault.sh
 ```
-This script initializes the vault operator and stores the keys needed to unseal the vault in `./scripts/vault/vault-keys.json`
-4. From the project root, run: 
+This script initializes the vault operator and stores the keys needed to unseal the vault in `./scripts/vault/vault-keys.txt`
+5. From the project root, run: 
 ```
 ./scripts/vault/unseal-vault.sh
 ```
 > NOTE: Vault is initially in a 'sealed' state and this script unseals it since that has to be done before secrets can be stored and/or retrieved.
 > At this point the `vault-0` should be in a `running` state. 
 
-5. Verify by running: 
+6. Verify by running: 
 ```
-kubectl -n vault-injector get po
+kubectl -n mvsd-vault get po
 ``` 
 The output should look similar to the following:
 ```
 NAME                                    READY   STATUS    RESTARTS   AGE
 vault-0                                 1/1     Running   0          9m46s
 ```
-6. Verify that vault is ready for secret storage/management:
+7. Verify that vault is ready for secret storage/management:
 ```
-kubectl exec -n vault-injector -it pod/vault-0 -- vault status | grep -E -i 'initialized|sealed'
+kubectl exec -n mvsd-vault -it pod/vault-0 -- vault status | grep -E -i 'initialized|sealed'
 ```
 You should see an output of `Initialized     true` and `Sealed          false` 
 
 ---
 
 #### Vault Authentication Config
-1. Exec into the vault container: 
+1. Exec into the vault container and authenticate vault with the root token: 
 ```
-kubectl exec -n vault-injector -it pod/vault-0 -- /bin/sh
+kubectl exec -n mvsd-vault -it pod/vault-0 -- vault login <VAULT_ROOT_KEY>
 ```
 2. Enable & configure the Kubernetes authentication method: 
 ```
@@ -125,7 +128,7 @@ vault kv put internal/database/config TOKEN=slidingYouOnSight
 ```
 3. Create a new policy named `read-internal-db-secret.hcl` that enables read capability for secrets at path `internal/data/database/config`: 
 ```
-vault policy write read-internal-db-secret.hcl - <<EOF
+vault policy write read-internal-db-secret - <<EOF
 path "internal/data/database/config" {
   capabilities = ["read"]
 }
@@ -135,12 +138,12 @@ EOF
 4. Create a role to link to the previously-created policy `read-internal-db-secret.hcl`:
 ```
 vault write auth/kubernetes/role/vault-read-internal-db-secret \
-  bound_service_account_names=mongo-vault-secrets-demo \
-  bound_service_account_namespaces=mongo-vault-secrets-demo \
-  policies=read-internal-db-secret.hcl \
+  bound_service_account_names=mvsd-demo-app \
+  bound_service_account_namespaces=mvsd-demo-app \
+  policies=read-internal-db-secret \
   ttl=1h
 ```
-> Any pod within the `mongo-vault-secrets-demo` namespace attached to the `mongo-vault-secrets-demo` should now be able to read the secret created in step #2. Generated tokens will be valid for 1 hour.
+> Any pod within the `mvsd-demo-app` namespace attached to the `mvsd-demo-app` serviceAccount should now be able to read the secret created in step #2. Generated tokens will be valid for 1 hour.
 
 ___
 
