@@ -47,6 +47,7 @@ This script cleans up the `mvsd-mongod` namespace. It also removes the persisten
 1. From the project root, run:
 ```
 ./scripts/vault/generate-tls-cert.sh
+```
 2. From the project root, run:
 ```
 ./scripts/vault/setup.sh
