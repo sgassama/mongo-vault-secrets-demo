@@ -78,10 +78,6 @@ spec:
                 topologyKey: kubernetes.io/hostname
       terminationGracePeriodSeconds: 10
       volumes:
-        - name: secrets-volume
-          secret:
-            secretName: mvsd-mongod-bootstrap-secret
-            defaultMode: 256
         - name: tmp-volume
           emptyDir: { }
       initContainers:
@@ -108,6 +104,11 @@ spec:
       containers:
         - name: mongod-container
           image: mongo:5.0.3
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: main_admin
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: MyPa55wd123
           command:
             - "mongod"
             - "--wiredTigerCacheSizeGB"
@@ -118,14 +119,11 @@ spec:
             - "MainRepSet"
           resources:
             requests:
-              cpu: 0.2
+              cpu: '0.2'
               memory: 200Mi
           ports:
             - containerPort: 27017
           volumeMounts:
-            - name: secrets-volume
-              readOnly: true
-              mountPath: /etc/secrets-volume
             - name: mongodb-persistent-storage-claim
               mountPath: /data/db
         - name: mongo-sidecar

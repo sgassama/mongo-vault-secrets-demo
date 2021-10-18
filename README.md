@@ -8,7 +8,7 @@
 
 1. From the project root, run:
 ```
-./scripts/mongod/setup.sh
+./scripts/mongod/deploy-mongod.sh
 ``` 
 This deploys a `mongod` statefulset with 3 replicas. Each pod contains a sidecar `cvallance/mongo-k8s-sidecar` which monitors the namespace for any `mongod` containers and adds them to a replicaset.
 2. Verify the pods are running:
@@ -50,7 +50,7 @@ This script cleans up the `mvsd-mongod` namespace. It also removes the persisten
 ```
 2. From the project root, run:
 ```
-./scripts/vault/setup.sh
+./scripts/vault/deploy-vault.sh
 ``` 
 This deploys a `vault` server, a secret injector, along with the RBAC policies necessary to inject secrets from the vault agent.
 3. Verify that the container has been deployed: 
@@ -93,15 +93,11 @@ You should see an output of `Initialized     true` and `Sealed          false`
 ---
 
 #### Vault Authentication Config
-1. Exec into the vault container and authenticate vault with the root token: 
-```
-kubectl exec -n mvsd-vault -it pod/vault-0 -- vault login <VAULT_ROOT_KEY>
-```
-2. Enable & configure the Kubernetes authentication method: 
+1. Enable & configure the Kubernetes authentication method: 
 ```
 vault auth enable kubernetes
 ```
-3. Set vault token config:
+2. Set vault token config:
 ```
 vault write auth/kubernetes/config \
   token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
@@ -123,10 +119,10 @@ vault write auth/kubernetes/config \
 ```
 vault secrets enable -path=internal kv-v2
 ```
-2. Create a secret at the path `internal/database/config`: 
+2. Create secrets at the path `internal/database/config`: 
 ```
-vault kv put internal/database/config TOKEN=slidingYouOnSight
-```
+vault kv put internal/database/config DB_PASS=MyPa55wd123 DB_USER=main_admin
+``` 
 3. Create a new policy named `read-internal-db-secret.hcl` that enables read capability for secrets at path `internal/data/database/config`: 
 ```
 vault policy write read-internal-db-secret - <<EOF
@@ -135,7 +131,7 @@ path "internal/data/database/config" {
 }
 EOF
 ```
-> NOTE: Notice that the policy path `(internal/data/database/config)` includes the `/data/`, whereas when reading/writing a secret the `/data/` portion is omitted. E.g. `vault kv put internal/database/config`.
+> NOTE: Notice that the policy path `(internal/data/database/config)` includes the `/data/`, however when reading/writing a secret the `/data/` portion is omitted. E.g. `vault kv put internal/database/config`.
 4. Create a role to link to the previously-created policy `read-internal-db-secret.hcl`:
 ```
 vault write auth/kubernetes/role/vault-read-internal-db-secret \

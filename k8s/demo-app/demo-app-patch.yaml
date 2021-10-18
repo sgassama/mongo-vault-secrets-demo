@@ -3,9 +3,17 @@ spec:
     metadata:
       annotations:
         vault.hashicorp.com/agent-inject: 'true'
+        vault.hashicorp.com/agent-inject-status: "update"
         vault.hashicorp.com/role: 'vault-read-internal-db-secret'
-        vault.hashicorp.com/agent-inject-secret-config.txt: 'internal/database/config'
-#        vault.hashicorp.com/agent-inject-template-config.txt: |
-#          {{- with secret "internal/data/database/config" -}}
-#          TOKEN: {{ .Data.data.TOKEN }}
-#          {{- end }}
+        vault.hashicorp.com/agent-pre-populate-only: "true"
+        vault.hashicorp.com/ca-cert: '/run/secrets/kubernetes.io/serviceaccount/ca.crt'
+        vault.hashicorp.com/agent-inject-secret-config.json: 'internal/database/config'
+        vault.hashicorp.com/agent-inject-template-config.json: |
+          {
+            {{- with secret "internal/data/database/config" -}}
+            "DB_USER": "{{ .Data.data.DB_USER }}",
+            {{- end }}
+            {{- with secret "internal/data/database/config" -}}
+            "DB_PASS": "{{ .Data.data.DB_PASS }}"
+            {{- end }}
+          }

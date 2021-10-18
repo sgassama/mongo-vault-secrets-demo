@@ -1,0 +1,32 @@
+{
+  "name": "demo-app",
+  "version": "1.0.0",
+  "description": "App to demo secret injection (part of 12-factoring) using vault & mongod in k8s",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "N/A"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sgassama/mongo-vault-secrets-demo.git"
+  },
+  "keywords": [
+    "vault",
+    "k8s",
+    "kubernetes",
+    "mongo",
+    "12-factor"
+  ],
+  "author": "siaka gassama",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sgassama/mongo-vault-secrets-demo/issues"
+  },
+  "homepage": "https://github.com/sgassama/mongo-vault-secrets-demo#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "fs": "^0.0.1-security",
+    "mongoose": "^6.0.11"
+  }
+}

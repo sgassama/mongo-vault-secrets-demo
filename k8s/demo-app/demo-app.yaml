@@ -7,69 +7,24 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mvsd-demo-app-deployment
+  name: demo-app-deployment
   labels:
-    app: mvsd-demo-app
-  annotations:
-    vault.hashicorp.com/agent-inject: 'true'
-    vault.hashicorp.com/agent-inject-status: "update"
-    vault.hashicorp.com/role: 'vault-read-internal-db-secret'
-    vault.hashicorp.com/agent-inject-secret-config.txt: 'internal/database/config'
-    vault.hashicorp.com/agent-pre-populate-only: "true"
-    vault.hashicorp.com/ca-cert: '/run/secrets/kubernetes.io/serviceaccount/ca.crt'
+    app: demo-app
 spec:
-  replicas: 1
   selector:
     matchLabels:
-      app: mvsd-demo-app
+      app: demo-app-pod
+  replicas: 1
   template:
     metadata:
+      name: demo-app-pod
       labels:
-        app: mvsd-demo-app
+        app: demo-app-pod
     spec:
       serviceAccountName: mvsd-demo-app
+      imagePullSecrets:
+        - name: dockercred
       containers:
-        - name: mvsd-demo-app
-          image: busybox:latest
-          command:
-            - /bin/sh
-            - -c
-            - |
-              set -o errexit
-              set -o pipefail
-              set -o nounset
-              
-              ls -l
-              sleep infinity
-
----
-
-apiVersion: v1
-kind: Pod
-metadata:
-  name: test
-  labels:
-    app: test
-  annotations:
-    vault.hashicorp.com/agent-inject: 'true'
-    vault.hashicorp.com/agent-inject-status: "update"
-    vault.hashicorp.com/role: 'vault-read-internal-db-secret'
-    vault.hashicorp.com/agent-inject-secret-config.txt: 'internal/database/config'
-    vault.hashicorp.com/agent-pre-populate-only: "true"
-    vault.hashicorp.com/ca-cert: '/run/secrets/kubernetes.io/serviceaccount/ca.crt'
-spec:
-  serviceAccountName: mvsd-demo-app
-  containers:
-    - name: app
-      image: busybox
-      command:
-        - /bin/sh
-        - -c
-        - |
-          set -o errexit
-          set -o pipefail
-          set -o nounset
-
-          ls -l
-          sleep infinity
-
+        - name: demo-app
+          image: siakag/mongo-vault-secrets-demo:1.0.0
+          imagePullPolicy: Always
