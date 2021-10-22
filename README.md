@@ -166,10 +166,63 @@ ___
 
 ## Demo App
 
-#### Setup
-1. 
+> NOTE: ./k8s/demo-app/values.yaml or other variables 
+> may have to be changed if you modify any of the steps below.  
 
+#### Setup
+1. Build and push the docker image:
+```
+ docker build -t siakag/mongo-vault-secrets-demo:1.0.0 . -f ./mongo-vault-secrets-demo.Dockerfile
+```
+```
+ docker push siakag/mongo-vault-secrets-demo:1.0.0
+```
+2. Create a secret to enable obtaining your docker image
+```
+./scripts/demo-app/create-dockercred-secret.sh
+```
+3. Deploy demo-app initially without vault secret functionality:
+```
+./scripts/demo-app/deploy-demo-app.sh
+```
+3. The logs should show that demo-app errors out as a result of not having the secrets injected. Verify this by running:
+```
+POD=$(kubectl get po -n mvsd-demo-app | awk 'NR == 2' | awk '{print $1}')
+```
+and then:
+```
+kubectl logs -n mvsd-demo-app $POD
+```
+the output should include the following:
+```
+ERROR:
+[Error: ENOENT: no such file or directory, open '/vault/secrets/config.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/vault/secrets/config.json'
+}
+```
+4. Now we can patch the deployment to enable secrets in demo-app:
+```
+kubectl patch deployment.apps/mvsd-demo-app-deployment -n mvsd-demo-app --patch "$(cat ./k8s/demo-app/patch/demo-app-patch.yaml)"
+```
+5. Verify that the pod has accessed the vault secrets and has connected to the mongo database:
+```
+POD=$(k get po -n mvsd-demo-app | awk 'NR == 2' | awk '{print $1}')
+```
+and then:
+```
+kubectl logs -n mvsd-demo-app $POD
+```
 ___
+you should see a log stating that it has connected to the database successfully:
+```
+Database open! ...
+```
 
 #### Teardown
-1. 
+1. Run the teardown script from the project root: 
+```
+./scripts/demo-app/teardown.sh
+```
