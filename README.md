@@ -1,6 +1,7 @@
 # Mongo/Vault Secret Injection
 
 *********************************
+> NOTE: Two dependencies (`jq` and `yq`) will need to be installed on your machine in order to follow these instructions. 
 
 ## Mongo
 
