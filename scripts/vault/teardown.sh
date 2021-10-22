@@ -11,4 +11,4 @@ NS=mvsd-vault
 helm uninstall vault -n ${NS}
 sleep 3
 
-kubectl delete ns $NS
+kubectl delete ns ${NS}

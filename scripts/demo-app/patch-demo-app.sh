@@ -8,10 +8,8 @@ set -o nounset
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 NS=mvsd-demo-app
 
-# deploy demo-app
-#kubectl -n ${NS} apply -f "${SCRIPT_DIR}/../../k8s/demo-app/demo-app.yaml"
-helm upgrade --install ${NS} "${SCRIPT_DIR}/../../k8s/demo-app/" \
-  --namespace ${NS}
+# patch demo-app
+kubectl patch deployment.apps/${NS}-deployment -n ${NS} --patch "$(cat "${SCRIPT_DIR}/../../k8s/demo-app/patch/demo-app-patch.yaml")"
 sleep 10
 
 # add admin user

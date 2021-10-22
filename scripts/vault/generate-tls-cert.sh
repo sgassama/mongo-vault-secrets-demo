@@ -12,11 +12,11 @@ CSR_NAME=mvsd-vault-csr # cert signing request name
 TMPDIR=$(mktemp -d)
 
 #
-if grep -q -w $NS <<<"$(kubectl get ns)"; then
-  echo "$NS namespace already exists. Skipping to next step."
+if grep -q -w ${NS} <<<"$(kubectl get ns)"; then
+  echo "${NS} namespace already exists. Skipping to next step."
 else
-  echo "creating namespace: $NS"
-  kubectl create ns $NS
+  echo "creating namespace: ${NS}"
+  kubectl create ns ${NS}
 fi
 
 # create private key
@@ -53,7 +53,7 @@ metadata:
 spec:
   groups:
   - system:authenticated
-  request: $(cat "${TMPDIR}/server.csr" | base64 | tr -d '\n')
+  request: $(base64 < "${TMPDIR}/server.csr" | tr -d '\n')
   usages:
   - digital signature
   - key encipherment
@@ -88,7 +88,7 @@ kubectl -n ${NS} create secret generic ${TLS_SECRET_NAME} \
   --from-file=tls.crt="${TMPDIR}/vault.crt" \
   --from-file=vault-ca="${TMPDIR}/vault.ca"
 #
-kubectl get secret -n $NS | grep ${TLS_SECRET_NAME}
+kubectl get secret -n ${NS} | grep ${TLS_SECRET_NAME}
 # verify the certificate:
 openssl x509 -in "${TMPDIR}/vault.crt" -noout -text
 

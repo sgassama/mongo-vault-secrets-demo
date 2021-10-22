@@ -8,6 +8,9 @@ const connectOptions = {
 
 async function getConfigDefaults() {
   let data = {
+    server: {
+      port: process.env.MVSD_PORT || 3000
+    },
     db: {
       user: '',
       pass: '',

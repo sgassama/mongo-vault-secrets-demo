@@ -93,7 +93,11 @@ You should see an output of `Initialized     true` and `Sealed          false`
 ---
 
 #### Vault Authentication Config
-1. Enable & configure the Kubernetes authentication method: 
+1. Exec into the vault container
+```
+kubectl exec -it -n mvsd-vault vault-0 -- /bin/sh
+```
+2. Enable & configure the Kubernetes authentication method: 
 ```
 vault auth enable kubernetes
 ```
@@ -114,7 +118,11 @@ vault write auth/kubernetes/config \
 ---
 
 #### Vault Secrets
-1. Enable kv-v2 secrets at the path 
+1. Exec into the vault container
+```
+kubectl exec -it -n mvsd-vault vault-0 -- /bin/sh
+```
+2. Enable kv-v2 secrets at the path 
 `internal`: 
 ```
 vault secrets enable -path=internal kv-v2
@@ -123,7 +131,11 @@ vault secrets enable -path=internal kv-v2
 ```
 vault kv put internal/database/config DB_PASS=MyPa55wd123 DB_USER=main_admin
 ``` 
-3. Create a new policy named `read-internal-db-secret.hcl` that enables read capability for secrets at path `internal/data/database/config`: 
+3. Verify that the secret has been stored:
+```
+vault kv get internal/database/config
+```
+4. Create a new policy named `read-internal-db-secret.hcl` that enables read capability for secrets at path `internal/data/database/config`: 
 ```
 vault policy write read-internal-db-secret - <<EOF
 path "internal/data/database/config" {
@@ -151,3 +163,13 @@ ___
 ```
 
 *********************************
+
+## Demo App
+
+#### Setup
+1. 
+
+___
+
+#### Teardown
+1. 

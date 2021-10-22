@@ -3,35 +3,38 @@ const http = require('http');
 const mongoose = require('mongoose');
 const config = require('./config');
 
-const PORT = 3000;
-
 const app = express();
-const server = http.createServer(app);
+const appServer = http.createServer(app);
 
 app.get('/', (req, res) => {
+  console.log('req');
+  console.log(req);
   res.json('ok');
 });
 
-server.listen(`${PORT}`, () => {
-  console.log(`listening on port: ${PORT}`);
-
-  init()
-    .then(() => console.log('App initiated...'))
-    .catch(error => {
-      console.error('ERROR:');
-      console.error(error);
-    });
-});
+init()
+  .catch(error => {
+    console.error('ERROR:');
+    console.error(error);
+  });
 
 async function init() {
-  const { db } = await config.getConfigDefaults();
+  const {
+    db,
+    server: serverConfig
+  } = await config.getConfigDefaults();
 
   const url = `mongodb://${db.user}:${db.pass}@mongod-statefulset-0.mongodb-service.mvsd-mongod.svc.cluster.local:27017/admin?authSource=admin`;
 
-  await mongoose.connect(url, db.connectOptions);
+  mongoose.connect(url, db.connectOptions);
 
-  mongoose.connection.on('connected', () => {
-    console.log('Database connected');
+  mongoose.connection.on('open', () => {
+    console.log('Database open!\r\n');
+    console.log(`***** mongoose.connection ***** (⌐■_■)–【╦╤─ *=*=*=*=*=*=>> \r\n`, mongoose.connection);
+
+    appServer.listen(`${serverConfig.port}`, () => {
+      console.log(`listening on port: ${serverConfig.port}`);
+    });
   });
 
   mongoose.connection.on('close', () => {

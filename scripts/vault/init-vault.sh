@@ -9,5 +9,5 @@ NS=mvsd-vault
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 echo "Initializing vault and saving seal keys..."
-kubectl -n $NS exec pod/vault-0 -- vault operator init \
- -tls-skip-verify  >>"$SCRIPT_DIR/vault-keys.txt"
+kubectl -n ${NS} exec pod/vault-0 -- vault operator init \
+  -tls-skip-verify >"${SCRIPT_DIR}/vault-keys.txt"
